@@ -1,6 +1,12 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU2NTI2MiwiZXhwIjoxOTU5MTQxMjYyfQ.A4Yeg8k3X5ufvQ_HWCIvsrOO-Hy_B91NyK3N1SJ0sCc'
+const SUPABASE_URL = 'https://dfvskgdbhaxcluyskeso.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 export default function ChatPage() {
     const [mensagem, setMensagem] = React.useState('');
@@ -17,20 +23,40 @@ export default function ChatPage() {
     - [X] Vamos usar o onChange usa o useState (ter if pra caso seja enter pra limpar a variavel)
     - [X] Lista de mensagens 
     */
+    React.useEffect(() => { 
+        supabaseClient
+        .from('mensagens')
+        .select('*')
+        .order('id', { ascending: false})
+        .then(({ data }) => {
+            console.log('dados de consulta', data);
+            setListaDeMensagens(data);
+        });
+     }, []);
+   
     function handleNovaMensagem(novaMensagem) {
         if(novaMensagem === ""){
             return;
         }
         const mensagem = {
-            id: listaDeMensagens.length + 1,
-            de: 'Chard Willian',
+          //  id: listaDeMensagens.length + 1,
+            de: 'chardwillian',
             texto: novaMensagem,
         };
 
-        setListaDeMensagens([
-            mensagem,
-            ...listaDeMensagens,
-        ]);
+        supabaseClient
+        .from('mensagens')
+        .insert([
+            mensagem
+        ])
+        .then(({ data }) => {
+           // console.log('criando mensagem', oQueTavinoComoResposta )
+                setListaDeMensagens([
+                    data[0],
+                     ...listaDeMensagens,
+                ]);
+        });
+
         setMensagem('');
     }
 
@@ -184,7 +210,7 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/chardwillian.png`}
+                                src={`https://github.com/${mensagem.de}.png`}
                             />
                             <Text tag="strong" styleSheet={{color: appConfig.theme.colors.primary[901]}}>
                                 {mensagem.de}
